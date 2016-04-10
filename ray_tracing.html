@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TH_RayTracing</title>
+</head>
+<body>
+    <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/decls.js?nocache"></script>
+    <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/gpu.min.js?nocache"></script>
+    <script>
+        var camera = [
+            0,0,0,                     // x,y,z coordinates
+            0,0,1,                     // Direction vector
+            45                         // field of view : example 45
+        ];
+
+        var lights = [
+            2,                         // number of lights
+            200,200,200, 0,1,0,        // light 1, x,y,z location, and rgb colour (green)
+            100,100,100, 1,1,1         // light 2, x,y,z location, and rgb colour (white)
+        ];
+
+        var objects = [
+            1,                                                                             // number of objects
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0, 100,500,200,40,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0, 200,600,200,20            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+        ];
+
+        var pi=22/7;
+        var width_pixel = 800;  //Screen width in pixel unit
+        var height_pixel = 600; //Screen height in pixel unit
+        var ratio = width_pixel/height_pixel; //Ratio of screen width to screen height
+        var camAngleRad=camera[6]*pi/180;
+        var halfWidth = Math.tan(camAngleRad);  //screen half width in coordinate unit. ASSUMPTION: focal length = 1
+        var width = halfWidth*2;
+        var height = width/ratio;
+        var halfHeight = height/2;
+        var pixelWidth = width/width_pixel;    //width of a pixel
+        var pixelHeight = height/height_pixel; //height of a pixel
+        var halfPixelWidth = pixelWidth/2;
+        var halfPixelHeight = pixelHeight/2;
+
+        var gpu = new GPU();
+
+        function dot(x1,y1,z1,x2,y2,z2)
+        {
+            return x1*x2 + y1*y2 + z1*z2;
+        }
+
+        gpu.addFunction(dot);
+
+        function doit(mode) {
+            var opt = {
+                dimensions: [800,600],
+                debug: true,
+                graphical: true,
+                safeTextureReadHack: false,
+                constants: { OBJCOUNT: objects[0],
+                    EMPTY: ObjTyp.EMPTY,    SPHERE: ObjTyp.SPHERE,   CUBOID: ObjTyp.CUBOID,
+                    CYLINDER: ObjTyp.CYLINDER,   CONE: ObjTyp.CONE,   TRIANGLE: ObjTyp.TRIANGLE },
+                mode: mode
+            };
+
+            var y = gpu.createKernel(function(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects) {
+                this.color(0.95,0.95,0.95);
+                var ray_x= -halfWidth + this.thread.x * pixelWidth + halfPixelWidth;
+                var ray_y= halfHeight - this.thread.y * pixelHeight - halfPixelHeight;
+                var ray_z= 1;
+
+                for (i=0;i<this.constants.OBJCOUNT;i++)
+                {
+                    var idx = i*13 + 1;
+                    var sphere_x = objects[idx+9];
+                    var sphere_y = objects[idx+10];
+                    var sphere_z = objects[idx+11];
+
+                    var v = dot(sphere_x,sphere_y,sphere_z,ray_x,ray_y,ray_z);
+                    var c2 = dot(sphere_x,sphere_y,sphere_z,sphere_x,sphere_y,sphere_z);
+                    var radius = objects[idx+12];
+                    var discriminant = radius*radius - c2 + v*v;
+                    if(discriminant > 0)
+                    {
+                        this.color(objects[idx+2],objects[idx+3],objects[idx+4]);
+                    }
+                }
+            }, opt);
+            return y;
+        }
+
+        var mykernel = doit("gpu");
+        mykernel(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects);
+        var canvas = mykernel.getCanvas();
+        document.getElementsByTagName('body')[0].appendChild(canvas);
+    </script>
+    <canvas width="800" height="600"></canvas>
+</body>
+</html>

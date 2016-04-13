@@ -22,9 +22,9 @@
 
         var objects = [
             3,                                                                             // number of objects
-            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0, -20,0,100,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  0 ,0,150,20,            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.CYLINDER,    14, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  -40,0,100,10,40
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0, -20,10,100,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  0 ,20,150,20,            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.CYLINDER,    14, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  -80,-30,100,10,40
         ];
 
         var pi=22/7;
@@ -60,7 +60,7 @@
                 var sqrt = Math.sqrt(discriminant);
                 var x1 = (-b + sqrt)/(2*a);
                 var x2 = (-b - sqrt)/(2*a);
-                if (x1<x2)
+                if (x1<=x2)
                     return x1;
                 else
                     return x2;
@@ -117,14 +117,14 @@
                     if(objects[idx]== this.constants.CYLINDER)
                     {
                         var radius = objects[idx+12];
-                        var height = objects[idx+12];
+                        var height = objects[idx+13];
                         var a = (unit_ray_x*unit_ray_x)+(unit_ray_z*unit_ray_z);
-                        var b = 2*unit_ray_x*obj_x + 2*unit_ray_z*obj_z;
-                        var c = (obj_x*obj_x)+(obj_z*obj_z)+radius*radius;
+                        var b = -(2*unit_ray_x*obj_x + 2*unit_ray_z*obj_z);
+                        var c = (obj_x*obj_x)+(obj_z*obj_z)-radius*radius;
                         var t = solveQuad(a,b,c);
                         if(t>0)
                         {
-                            if(t*unit_ray_y <= height)
+                            if(t*unit_ray_y <= obj_y+height && t*unit_ray_y>=obj_y)
                             {
                                 hit = 1;
                                 distance = t*length;

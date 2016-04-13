@@ -22,8 +22,8 @@
 
         var objects = [
             2,                                                                             // number of objects
-            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0, 40,0,90,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0, 20,0,100,20            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0, 20,-20,120,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0, 0,0,100,20            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
         ];
 
         var pi=22/7;
@@ -63,28 +63,38 @@
 
             var y = gpu.createKernel(function(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects) {
                 this.color(0.95,0.95,0.95);
-                var ray_x= -halfWidth + this.thread.x * pixelWidth + halfPixelWidth;
-                var ray_y= -halfHeight + this.thread.y * pixelHeight + halfPixelHeight;
-                var ray_z= 1;
+                var ray_x= -halfWidth + this.thread.x * pixelWidth + halfPixelWidth; //map pixel to coord
+                var ray_y= -halfHeight + this.thread.y * pixelHeight + halfPixelHeight; // map pixel to coords
+                var ray_z= 1; // default: focal length = 1
                 var length = Math.sqrt(ray_x*ray_x + ray_y*ray_y + ray_z*ray_z);
+                var distance = 0;
                 var minDist;
                 var count = 1;
+                var idx = 1;
+                var nextidx = 1;
                 for (i=0;i<this.constants.OBJCOUNT;i++)
                 {
-                    var idx = i*13 + 1;
-                    var sphere_x = objects[idx+9];
-                    var sphere_y = objects[idx+10];
-                    var sphere_z = objects[idx+11];
+                    var hit = 0;
+                    idx = nextidx;
+                    nextidx = idx + objects[idx+1];
+                    if (objects[idx]== this.constants.SPHERE) {
+                        var sphere_x = objects[idx + 9];
+                        var sphere_y = objects[idx + 10];
+                        var sphere_z = objects[idx + 11];
 
-                    var v = dot(sphere_x,sphere_y,sphere_z,ray_x,ray_y,ray_z);
-                    v = v/length;
-                    var c2 = dot(sphere_x,sphere_y,sphere_z,sphere_x,sphere_y,sphere_z);
-                    var radius = objects[idx+12];
-                    var discriminant = radius*radius - c2 + v*v;
-                    if(discriminant >= 0)
+                        var v = dot(sphere_x, sphere_y, sphere_z, ray_x, ray_y, ray_z);
+                        v = v / length;
+                        var c2 = dot(sphere_x, sphere_y, sphere_z, sphere_x, sphere_y, sphere_z);
+                        var radius = objects[idx + 12];
+                        var discriminant = radius * radius - c2 + v * v;
+                        if (discriminant >= 0) {
+                            hit = 1;
+                            distance = v - Math.sqrt(discriminant);
+                        }
+                    }
+                    if (hit == 1)
                     {
-                        var distance = v - Math.sqrt(discriminant);
-                        if(count==1) minDist = distance;
+                        if (count == 1) minDist = distance;
                         count++;
                         if (distance <= minDist) {
                             this.color(objects[idx + 2], objects[idx + 3], objects[idx + 4]);

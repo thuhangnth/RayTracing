@@ -33,13 +33,11 @@
         var ratio = width_in_pixel/height_in_pixel; //Ratio of screen width to screen height
         var camAngleRad=camera[6]*pi/180;
         var halfWidth = Math.tan(0.5*camAngleRad);  //screen half width in coordinate unit. ASSUMPTION: focal length = 1
+        var halfHeight = halfWidth/ratio;
         var width = halfWidth*2;
-        var height = width/ratio;
-        var halfHeight = height/2;
+        var height = halfHeight*2;
         var pixelWidth = width/width_in_pixel;    //width of a pixel
         var pixelHeight = height/height_in_pixel; //height of a pixel
-        var halfPixelWidth = pixelWidth/2;
-        var halfPixelHeight = pixelHeight/2;
 
         var gpu = new GPU();
 
@@ -82,10 +80,10 @@
                 mode: mode
             };
 
-            var y = gpu.createKernel(function(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects,cam) {
+            var y = gpu.createKernel(function(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,cam) {
                 this.color(0.95,0.95,0.95);
-                var ray_x= -halfWidth + this.thread.x * pixelWidth + halfPixelWidth; //map pixel to coord
-                var ray_y= -halfHeight + this.thread.y * pixelHeight + halfPixelHeight; // map pixel to coords
+                var ray_x= -halfWidth + this.thread.x * pixelWidth + 0.5*pixelWidth; //map pixel to coord
+                var ray_y= -halfHeight + this.thread.y * pixelHeight + 0.5*pixelHeight; // map pixel to coords
                 var ray_z= 1; // default: focal length = 1
                 var length = Math.sqrt(ray_x*ray_x + ray_y*ray_y + ray_z*ray_z);
                 var unit_ray_x = ray_x/length;
@@ -151,7 +149,7 @@
         var end_time;
         start_time = Math.floor(new Date().getTime());
         var mykernel = doit("gpu");
-        mykernel(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects,camera);
+        mykernel(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,camera);
         var canvas = mykernel.getCanvas();
         document.getElementsByTagName('body')[0].appendChild(canvas);
         end_time = Math.floor(new Date().getTime());

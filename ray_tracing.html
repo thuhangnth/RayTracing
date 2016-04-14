@@ -7,6 +7,7 @@
 <body>
     <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/decls.js?nocache"></script>
     <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/gpu.js?nocache"></script>
+    <div id="fps">1</div>
     <script>
         var camera = [
             0,20,-200,                     // x,y,z coordinates
@@ -21,9 +22,9 @@
         ];
 
         var objects = [
-            2,                                                                             // number of objects
+            3,                                                                             // number of objects
             ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0, 10,50,50,40,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-           /* ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  0 ,-20,280,20,*/            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0, -80,50,280,20,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
             ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  10,-20,40,40,10
         ];
 
@@ -187,6 +188,19 @@
         document.getElementsByTagName('body')[0].appendChild(canvas);
         end_time = Math.floor(new Date().getTime());
         document.write(end_time - start_time);
+
+        var f = document.querySelector("#fps");
+        function renderLoop() {
+            f.innerHTML = fps.getFPS();
+            mykernel(halfWidth, pixelWidth, halfHeight, pixelHeight, objects, camera);
+            var cv = document.getElementsByTagName("canvas")[0];
+            var bdy = cv.parentNode;
+            var newCanvas = mykernel.getCanvas();
+            bdy.replaceChild(newCanvas, cv);
+            objects[23] = (objects[23] + 2) % (width_in_pixel/2);
+            requestAnimationFrame(renderLoop);
+        }
+        window.onload = renderLoop;
     </script>
     <canvas width="800" height="600"></canvas>
 </body>

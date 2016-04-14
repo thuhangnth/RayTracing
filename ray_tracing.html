@@ -24,7 +24,7 @@
             2,                                                                             // number of objects
             ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0, 10,50,50,40,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
            /* ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  0 ,-20,280,20,*/            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  10,20,30,40,10
+            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  10,-20,40,40,10
         ];
 
         var pi=22/7;
@@ -46,27 +46,57 @@
             return x1*x2 + y1*y2 + z1*z2;
         }
 
-        function solveQuad(a,b,c)
+        function getMinRoot(a,b,c,sqrt)
+        {
+            var x1 = (-b + sqrt)/(2*a);
+            var x2 = (-b - sqrt)/(2*a);
+            if (x1<=x2)
+                return x1;
+            else
+                return x2;
+        }
+
+        function getDiscriminant(a,b,c)
         {
             var discriminant = b*b - 4*a*c;
-            if(discriminant < 0)
+            if(discriminant <0)
             {
                 return -1;
             }
             else
             {
-                var sqrt = Math.sqrt(discriminant);
-                var x1 = (-b + sqrt)/(2*a);
-                var x2 = (-b - sqrt)/(2*a);
-                if (x1<=x2)
-                    return x1;
-                else
-                    return x2;
+                return Math.sqrt(discriminant);
             }
+        }
+        function CylinderIntersect(a,b,c,sqrt,unit_y,ymin,ymax)
+        {
+            var t1 = (-b + sqrt)/(2*a);
+            var t2 = (-b - sqrt)/(2*a);
+            var temp;
+            if (t2<t1) // Make sure t1<t2
+            {
+                temp = t2;
+                t2=t1;
+                t1=temp;
+            }
+            var y1 = t1*unit_y;
+            var y2 = t2*unit_y;
+            if(y1>=ymin && y1<=ymax)
+            {
+                return t1;
+            }
+            else if(y2>=ymin && y2<=ymax)
+            {
+                return t2;
+            }
+            else
+                return -1;
         }
 
         gpu.addFunction(dot);
-        gpu.addFunction(solveQuad);
+        gpu.addFunction(getMinRoot);
+        gpu.addFunction(getDiscriminant);
+        gpu.addFunction(CylinderIntersect);
 
         function doit(mode) {
             var opt = {
@@ -108,28 +138,31 @@
                         var a=(unit_ray_x*unit_ray_x)+(unit_ray_y*unit_ray_y)+(unit_ray_z*unit_ray_z);
                         var b=-2*(unit_ray_x*obj_x+unit_ray_y*obj_y+unit_ray_z*obj_z);
                         var c=(obj_x*obj_x)+(obj_y*obj_y)+(obj_z*obj_z)-(radius*radius);
-                        t = solveQuad(a,b,c);
+                        var sqrt = getDiscriminant(a,b,c);
+                        if (sqrt>=0)
+                        {
+                            t = getMinRoot(a,b,c,sqrt);
+                        }
                         if(t>0)
                         {
                             hit = 1;
                             distance = t*length;
                         }
-
                     }
-                    if(objects[idx]== this.constants.CYLINDER)
+                    else if(objects[idx]== this.constants.CYLINDER)
                     {
                         var radius = objects[idx+12];
                         var height = objects[idx+13];
                         var a = (unit_ray_x*unit_ray_x)+(unit_ray_z*unit_ray_z);
                         var b = -(2*unit_ray_x*obj_x + 2*unit_ray_z*obj_z);
                         var c = (obj_x*obj_x)+(obj_z*obj_z)-radius*radius;
-                        t = solveQuad(a,b,c);
-                        if(t>0)
+                        var sqrt = getDiscriminant(a,b,c);
+                        if (sqrt>=0)
                         {
-                            if(t*unit_ray_y <= obj_y+height && t*unit_ray_y>=obj_y)
-                            {
+                            t= CylinderIntersect(a,b,c,sqrt,unit_ray_y,obj_y,obj_y+height);
+                            if(t>=0) {
                                 hit = 1;
-                                distance = t*length;
+                                distance = t * length;
                             }
                         }
                     }

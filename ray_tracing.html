@@ -9,7 +9,7 @@
     <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/gpu.js?nocache"></script>
     <script>
         var camera = [
-            0,0,0,                     // x,y,z coordinates
+            0,20,-200,                     // x,y,z coordinates
             0,0,1,                     // Direction vector
             45                         // field of view : example 45
         ];
@@ -21,23 +21,23 @@
         ];
 
         var objects = [
-            3,                                                                             // number of objects
-            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0, -20,10,100,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  0 ,20,150,20,            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.CYLINDER,    14, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  -80,-30,100,10,40
+            2,                                                                             // number of objects
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0, 10,50,50,40,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+           /* ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  0 ,-20,280,20,*/            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  10,20,30,40,10
         ];
 
         var pi=22/7;
-        var width_pixel = 800;  //Screen width in pixel unit
-        var height_pixel = 600; //Screen height in pixel unit
-        var ratio = width_pixel/height_pixel; //Ratio of screen width to screen height
+        var width_in_pixel = 800;  //Screen width in pixel unit
+        var height_in_pixel = 600; //Screen height in pixel unit
+        var ratio = width_in_pixel/height_in_pixel; //Ratio of screen width to screen height
         var camAngleRad=camera[6]*pi/180;
-        var halfWidth = Math.tan(camAngleRad);  //screen half width in coordinate unit. ASSUMPTION: focal length = 1
+        var halfWidth = Math.tan(0.5*camAngleRad);  //screen half width in coordinate unit. ASSUMPTION: focal length = 1
         var width = halfWidth*2;
         var height = width/ratio;
         var halfHeight = height/2;
-        var pixelWidth = width/width_pixel;    //width of a pixel
-        var pixelHeight = height/height_pixel; //height of a pixel
+        var pixelWidth = width/width_in_pixel;    //width of a pixel
+        var pixelHeight = height/height_in_pixel; //height of a pixel
         var halfPixelWidth = pixelWidth/2;
         var halfPixelHeight = pixelHeight/2;
 
@@ -72,7 +72,7 @@
 
         function doit(mode) {
             var opt = {
-                dimensions: [width_pixel,height_pixel],
+                dimensions: [width_in_pixel,height_in_pixel],
                 debug: true,
                 graphical: true,
                 safeTextureReadHack: false,
@@ -82,7 +82,7 @@
                 mode: mode
             };
 
-            var y = gpu.createKernel(function(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects) {
+            var y = gpu.createKernel(function(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects,cam) {
                 this.color(0.95,0.95,0.95);
                 var ray_x= -halfWidth + this.thread.x * pixelWidth + halfPixelWidth; //map pixel to coord
                 var ray_y= -halfHeight + this.thread.y * pixelHeight + halfPixelHeight; // map pixel to coords
@@ -102,9 +102,9 @@
                     var t;
                     idx = nextidx;
                     nextidx = idx + objects[idx+1];
-                    var obj_x = objects[idx + 9];
-                    var obj_y = objects[idx + 10];
-                    var obj_z = objects[idx + 11];
+                    var obj_x = objects[idx + 9]-cam[0];
+                    var obj_y = objects[idx + 10]-cam[1];
+                    var obj_z = objects[idx + 11]-cam[2];
                     if (objects[idx]== this.constants.SPHERE) {
                         var radius = objects[idx+12];
                         var a=(unit_ray_x*unit_ray_x)+(unit_ray_y*unit_ray_y)+(unit_ray_z*unit_ray_z);
@@ -151,7 +151,7 @@
         var end_time;
         start_time = Math.floor(new Date().getTime());
         var mykernel = doit("gpu");
-        mykernel(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects);
+        mykernel(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects,camera);
         var canvas = mykernel.getCanvas();
         document.getElementsByTagName('body')[0].appendChild(canvas);
         end_time = Math.floor(new Date().getTime());

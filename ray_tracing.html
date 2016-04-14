@@ -72,7 +72,7 @@
 
         function doit(mode) {
             var opt = {
-                dimensions: [800,600],
+                dimensions: [width_pixel,height_pixel],
                 debug: true,
                 graphical: true,
                 safeTextureReadHack: false,
@@ -99,20 +99,24 @@
                 for (i=0;i<this.constants.OBJCOUNT;i++)
                 {
                     var hit = 0;
+                    var t;
                     idx = nextidx;
                     nextidx = idx + objects[idx+1];
                     var obj_x = objects[idx + 9];
                     var obj_y = objects[idx + 10];
                     var obj_z = objects[idx + 11];
                     if (objects[idx]== this.constants.SPHERE) {
-                        var v = dot(obj_x, obj_y, obj_z, unit_ray_x, unit_ray_y, unit_ray_z);
-                        var c2 = dot(obj_x, obj_y, obj_z, obj_x, obj_y, obj_z);
-                        var radius = objects[idx + 12];
-                        var discriminant = radius * radius - c2 + v * v;
-                        if (discriminant >= 0) {
+                        var radius = objects[idx+12];
+                        var a=(unit_ray_x*unit_ray_x)+(unit_ray_y*unit_ray_y)+(unit_ray_z*unit_ray_z);
+                        var b=-2*(unit_ray_x*obj_x+unit_ray_y*obj_y+unit_ray_z*obj_z);
+                        var c=(obj_x*obj_x)+(obj_y*obj_y)+(obj_z*obj_z)-(radius*radius);
+                        t = solveQuad(a,b,c);
+                        if(t>0)
+                        {
                             hit = 1;
-                            distance = v - Math.sqrt(discriminant);
+                            distance = t*length;
                         }
+
                     }
                     if(objects[idx]== this.constants.CYLINDER)
                     {
@@ -121,7 +125,7 @@
                         var a = (unit_ray_x*unit_ray_x)+(unit_ray_z*unit_ray_z);
                         var b = -(2*unit_ray_x*obj_x + 2*unit_ray_z*obj_z);
                         var c = (obj_x*obj_x)+(obj_z*obj_z)-radius*radius;
-                        var t = solveQuad(a,b,c);
+                        t = solveQuad(a,b,c);
                         if(t>0)
                         {
                             if(t*unit_ray_y <= obj_y+height && t*unit_ray_y>=obj_y)
@@ -143,11 +147,15 @@
             }, opt);
             return y;
         }
-
+        var start_time;
+        var end_time;
+        start_time = Math.floor(new Date().getTime());
         var mykernel = doit("gpu");
         mykernel(halfWidth,pixelWidth,halfPixelWidth,halfHeight,pixelHeight,halfPixelHeight,objects);
         var canvas = mykernel.getCanvas();
         document.getElementsByTagName('body')[0].appendChild(canvas);
+        end_time = Math.floor(new Date().getTime());
+        document.write(end_time - start_time);
     </script>
     <canvas width="800" height="600"></canvas>
 </body>

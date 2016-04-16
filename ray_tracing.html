@@ -7,8 +7,21 @@
 <body>
     <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/decls.js?nocache"></script>
     <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/gpu.js?nocache"></script>
+    <input type="button" value="Zoom in" onclick="return change(this);">
+    <input type="button" value="Zoom out" onclick="return change(this);">
     <div id="fps">1</div>
     <script>
+
+        var selection = 0;
+
+        function change( el ) {
+            if ( el.value === "Zoom in" ) {
+                selection = 1;
+            } else {
+                selection = 2;
+            }
+        }
+
         var camera = [
             0,20,-200,                     // x,y,z coordinates
             0,0,1,                     // Direction vector
@@ -22,10 +35,11 @@
         ];
 
         var objects = [
-            3,                                                                             // number of objects
+            4,                                                                             // number of objects
             ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  0,50,280,40,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
             ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  120,50,280,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  0,100,280,40,10
+            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  0,100,280,40,10,
+            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  120,-100,280,40,10
         ];
 
         var pi=22/7;
@@ -181,8 +195,9 @@
         }
         var start_time;
         var end_time;
-        start_time = Math.floor(new Date().getTime());
+
         var mykernel = doit("gpu");
+        start_time = Math.floor(new Date().getTime());
         mykernel(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,camera);
         var canvas = mykernel.getCanvas();
         document.getElementsByTagName('body')[0].appendChild(canvas);
@@ -193,6 +208,16 @@
         var angle = 0;
         var rotRad = objects[23]-objects[10];
         function renderLoop() {
+            if (selection === 1)
+            {
+                camera[2]+=10;
+                selection = 0;
+            }
+            else if(selection === 2)
+            {
+                camera[2]-=10;
+                selection = 0;
+            }
             f.innerHTML = fps.getFPS();
             mykernel(halfWidth, pixelWidth, halfHeight, pixelHeight, objects, camera);
             var cv = document.getElementsByTagName("canvas")[0];
@@ -201,7 +226,9 @@
             bdy.replaceChild(newCanvas, cv);
             objects[23] = objects[10]+Math.cos(angle)*rotRad;
             objects[25] = objects[12]+Math.sin(angle)*rotRad;
-            angle = angle+0.05;
+            objects[50] = objects[10]+Math.cos(-angle)*rotRad;
+            objects[52] = objects[12]+Math.sin(-angle)*rotRad;
+            angle = angle+0.01;
             requestAnimationFrame(renderLoop);
         }
         window.onload = renderLoop;

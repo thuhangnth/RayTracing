@@ -35,11 +35,19 @@
         ];
 
         var objects = [
-            4,                                                                             // number of objects
+            10,                                                                             // number of objects
             ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  0,50,280,40,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
             ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  120,50,280,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
             ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  0,100,280,40,10,
-            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  120,-100,280,40,10
+            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  120,-100,280,40,10,
+            ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  -200,-100,380,20,250,
+            ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  -200,-100,580,20,250,
+            ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  -200,-100,780,20,250,
+            ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  200,-100,380,20,250,
+            ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  200,-100,580,20,250,
+            ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  200,-100,780,20,250,
+            ObjTyp.PLANE,       15, 0.0,0.5,0.5,0.2,0.7,0.2,2.0,  0,-100,0,0,1,0
+
         ];
 
         var pi=22/7;
@@ -121,7 +129,8 @@
                 safeTextureReadHack: false,
                 constants: { OBJCOUNT: objects[0],
                     EMPTY: ObjTyp.EMPTY,    SPHERE: ObjTyp.SPHERE,   CUBOID: ObjTyp.CUBOID,
-                    CYLINDER: ObjTyp.CYLINDER,   CONE: ObjTyp.CONE,   TRIANGLE: ObjTyp.TRIANGLE },
+                    CYLINDER: ObjTyp.CYLINDER,   CONE: ObjTyp.CONE,   TRIANGLE: ObjTyp.TRIANGLE/*,
+                    PLANE: ObjTyp.PLANE*/ },
                 mode: mode
             };
 
@@ -181,6 +190,27 @@
                             }
                         }
                     }
+                    /*else if(objects[idx]==this.constants.PLANE)
+                    {
+                        var nor_x = objects[idx+12];
+                        var nor_y = objects[idx+13];
+                        var nor_z = objects[idx+14];
+                        var length_nor = Math.sqrt(nor_x*nor_x+nor_y*nor_y+nor_z*nor_z);
+                        nor_x = nor_x/length_nor;
+                        nor_y = nor_y/length_nor;
+                        nor_z = nor_z/length_nor;
+                        var ND = dot(nor_x,nor_y,nor_z,unit_ray_x,unit_ray_y,unit_ray_z);
+                        if (ND!=0)
+                        {
+                            var NQ = dot(nor_x,nor_y,nor_z,obj_x,obj_y,obj_z);
+                            t = NQ/ND;
+                            if(t>=0)
+                            {
+                                hit = 1;
+                                distance = t*length;
+                            }
+                        }
+                    }*/
                     if (hit == 1)
                     {
                         if (count == 1) minDist = distance;

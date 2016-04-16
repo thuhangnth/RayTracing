@@ -8,10 +8,12 @@
 <body>
     <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/decls.js?nocache"></script>
     <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/scene.js?nocache"></script>
-    <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/gpu.min.js?nocache"></script>
+    <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/gpu.js?nocache"></script>
     <input type="button" value="Using CPU" onclick="return change(this);">
     <div id="fps">1</div>
     <script>
+
+
         var selection = 0;
 
         function change( el ) {
@@ -89,10 +91,12 @@
             }
             objects[10] = (objects[10]+2) % 900;
             objects[24] = (objects[24]+2) % 700;
-    //      setTimeout(renderLoop,1);            // Uncomment this line, and comment the next line
+//      setTimeout(renderLoop,1);            // Uncomment this line, and comment the next line
             requestAnimationFrame(renderLoop);     // to see how fast this could run...
         }
         window.onload = renderLoop;
+
+
     </script>
     <canvas width="800" height="600"></canvas>
 </body>

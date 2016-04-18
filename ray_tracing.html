@@ -29,17 +29,17 @@
         ];
 
         var lights = [
-            2,                         // number of lights
-            200,200,200, 0,1,0,        // light 1, x,y,z location, and rgb colour (green)
-            100,100,100, 1,1,1         // light 2, x,y,z location, and rgb colour (white)
+            1,                         // number of lights
+            0,60,50, 0,1,0,        // light 1, x,y,z location, and rgb colour (green)
+            //100,100,100, 1,1,1         // light 2, x,y,z location, and rgb colour (white)
         ];
 
         var objects = [
             10,                                                                             // number of objects
-            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  0,50,280,40,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  120,50,280,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  0,100,280,40,10,
-            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  120,-100,280,40,10,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  0,10,280,40,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  120,10,280,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  0,70,280,40,10,
+            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  120,-50,280,40,10,
             ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  -200,-100,380,20,250,
             ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  -200,-100,580,20,250,
             ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  -200,-100,780,20,250,
@@ -48,11 +48,10 @@
             ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  200,-100,780,20,250,
             ObjTyp.PLANE,       15, 0.0,0.5,0.5,0.2,0.7,0.2,2.0,  0,-100,0,0,1,0
 
-        ];
-
+        ]
         var pi=22/7;
-        var width_in_pixel = 800;  //Screen width in pixel unit
-        var height_in_pixel = 600; //Screen height in pixel unit
+        var width_in_pixel = 1024;  //Screen width in pixel unit
+        var height_in_pixel = 768; //Screen height in pixel unit
         var ratio = width_in_pixel/height_in_pixel; //Ratio of screen width to screen height
         var camAngleRad=camera[6]*pi/180;
         var halfWidth = Math.tan(0.5*camAngleRad);  //screen half width in coordinate unit. ASSUMPTION: focal length = 1
@@ -134,7 +133,7 @@
                 mode: mode
             };
 
-            var y = gpu.createKernel(function(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,cam) {
+            var y = gpu.createKernel(function(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,cam, lights) {
                 this.color(0.95,0.95,0.95);
                 var ray_x= -halfWidth + this.thread.x * pixelWidth + 0.5*pixelWidth; //map pixel to coord
                 var ray_y= -halfHeight + this.thread.y * pixelHeight + 0.5*pixelHeight; // map pixel to coords
@@ -213,10 +212,29 @@
                     }*/
                     if (hit == 1)
                     {
+                        var lamb = 1;
                         if (count == 1) minDist = distance;
                         count++;
                         if (distance <= minDist) {
-                            this.color(objects[idx + 2], objects[idx + 3], objects[idx + 4]);
+                                var hit_x = unit_ray_x*t;
+                                var hit_y = unit_ray_y*t;
+                                var hit_z = unit_ray_z*t;
+                                var light_x = lights[1]-cam[0] - hit_x;
+                                var light_y = lights[2]-cam[1] - hit_y;
+                                var light_z = lights[3]-cam[2] - hit_z;
+                                var light_length = Math.sqrt(light_x*light_x+light_y*light_y+light_z*light_z);
+                                light_x = light_x/light_length;
+                                light_y = light_y/light_length;
+                                light_z = light_z/light_length;
+                                var norm_x = hit_x - obj_x;
+                                var norm_y = hit_y - obj_y;
+                                var norm_z = hit_z - obj_z;
+                                var length_norm = Math.sqrt(norm_x*norm_x+norm_y*norm_y+norm_z*norm_z);
+                                norm_x = norm_x/length_norm;
+                                norm_y = norm_y/length_norm;
+                                norm_z = norm_z/length_norm;
+                                lamb = objects[idx+6]*dot(norm_x, norm_y, norm_z, light_x, light_y, light_z)+objects[idx+7];
+                            this.color(objects[idx + 2]*lamb, objects[idx + 3]*lamb, objects[idx + 4]*lamb);
                         }
                     }
                 }
@@ -228,7 +246,7 @@
 
         var mykernel = doit("gpu");
         start_time = Math.floor(new Date().getTime());
-        mykernel(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,camera);
+        mykernel(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,camera,lights);
         var canvas = mykernel.getCanvas();
         document.getElementsByTagName('body')[0].appendChild(canvas);
         end_time = Math.floor(new Date().getTime());
@@ -249,7 +267,7 @@
                 selection = 0;
             }
             f.innerHTML = fps.getFPS();
-            mykernel(halfWidth, pixelWidth, halfHeight, pixelHeight, objects, camera);
+            mykernel(halfWidth, pixelWidth, halfHeight, pixelHeight, objects, camera, lights);
             var cv = document.getElementsByTagName("canvas")[0];
             var bdy = cv.parentNode;
             var newCanvas = mykernel.getCanvas();

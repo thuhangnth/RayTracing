@@ -9,16 +9,37 @@
     <script src="http://www.comp.nus.edu.sg/~hugh/CS3211/js/gpu.js?nocache"></script>
     <input type="button" value="Zoom in" onclick="return change(this);">
     <input type="button" value="Zoom out" onclick="return change(this);">
+    <input type="button" value="Move up" onclick="return change(this);">
+    <input type="button" value="Move down" onclick="return change(this);">
+    <input type="button" value="Using CPU" onclick="return change1(this);">
     <div id="fps">1</div>
     <script>
 
         var selection = 0;
+        var selection1 = 0;
 
-        function change( el ) {
+       function change( el ) {
             if ( el.value === "Zoom in" ) {
                 selection = 1;
-            } else {
+            } else if(el.value == "Zoom out"){
                 selection = 2;
+            }
+            else if(el.value == "Move up"){
+                selection = 3;
+            }
+            else if(el.value == "Move down")
+            {
+                selection = 4;
+            }
+        }
+
+        function change1( el ) {
+            if ( el.value === "Using CPU" ) {
+                selection1 = 1;
+                el.value = "Using GPU";
+            } else {
+                selection1 = 0;
+                el.value = "Using CPU";
             }
         }
 
@@ -30,28 +51,46 @@
 
         var lights = [
             1,                         // number of lights
-            0,60,50, 0,1,0,        // light 1, x,y,z location, and rgb colour (green)
+            0,60,50, 0,1,0        // light 1, x,y,z location, and rgb colour (green)
             //100,100,100, 1,1,1         // light 2, x,y,z location, and rgb colour (white)
         ];
 
         var objects = [
             10,                                                                             // number of objects
-            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  0,10,280,40,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  120,10,280,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
-            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  0,70,280,40,10,
-            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  120,-50,280,40,10,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  0,10,280,40, // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            /*ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  10,10,280,40,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  20,10,280,40,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  30,10,280,40,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  40,10,280,40,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  50,10,280,40,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  60,10,280,40,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  70,10,280,40,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  80,10,280,40,
+            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  90,10,280,40,*/
+            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  120,50,280,10,           // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  0,100,280,40,10,
+            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,height
+            ObjTyp.CYLINDER,    14, 0.0,1.0,0.0,0.2,0.7,0.1,1.0,  120,-100,280,40,10,
+            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,height
             ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  -200,-100,380,20,250,
+            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,height
             ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  -200,-100,580,20,250,
+            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,height
             ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  -200,-100,780,20,250,
+            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,height
             ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  200,-100,380,20,250,
+            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,height
             ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  200,-100,580,20,250,
-            ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  200,-100,780,20,250,
-            ObjTyp.PLANE,       15, 0.0,0.5,0.5,0.2,0.7,0.2,2.0,  0,-100,0,0,1,0
+            //typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,height
+            ObjTyp.CYLINDER,    14, 0.5,0.0,0.5,0.2,0.7,0.2,2.0,  200,-100,780,20,250
+            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,height
+            /*ObjTyp.PLANE,       13, 0.0,1.0,0.0,0.2,0.7,0.2,2.0,  200,-100,0,0,1,0
+            // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,normal x, normal y, normal z*/
+        ];
 
-        ]
         var pi=22/7;
-        var width_in_pixel = 1024;  //Screen width in pixel unit
-        var height_in_pixel = 768; //Screen height in pixel unit
+        var width_in_pixel = 800;  //Screen width in pixel unit
+        var height_in_pixel = 600; //Screen height in pixel unit
         var ratio = width_in_pixel/height_in_pixel; //Ratio of screen width to screen height
         var camAngleRad=camera[6]*pi/180;
         var halfWidth = Math.tan(0.5*camAngleRad);  //screen half width in coordinate unit. ASSUMPTION: focal length = 1
@@ -63,12 +102,12 @@
 
         var gpu = new GPU();
 
-        function dot(x1,y1,z1,x2,y2,z2)
+        function dot(x1,y1,z1,x2,y2,z2) //dot product
         {
             return x1*x2 + y1*y2 + z1*z2;
         }
 
-        function getMinRoot(a,b,c,sqrt)
+        function getMinRoot(a,b,c,sqrt) //solve quadratic equation
         {
             var x1 = (-b + sqrt)/(2*a);
             var x2 = (-b - sqrt)/(2*a);
@@ -129,19 +168,19 @@
                 constants: { OBJCOUNT: objects[0],
                     EMPTY: ObjTyp.EMPTY,    SPHERE: ObjTyp.SPHERE,   CUBOID: ObjTyp.CUBOID,
                     CYLINDER: ObjTyp.CYLINDER,   CONE: ObjTyp.CONE,   TRIANGLE: ObjTyp.TRIANGLE/*,
-                    PLANE: ObjTyp.PLANE*/ },
+                    PLANE: ObjTyp.PLANE*/},
                 mode: mode
             };
 
             var y = gpu.createKernel(function(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,cam, lights) {
                 this.color(0.95,0.95,0.95);
-                var ray_x= -halfWidth + this.thread.x * pixelWidth + 0.5*pixelWidth; //map pixel to coord
-                var ray_y= -halfHeight + this.thread.y * pixelHeight + 0.5*pixelHeight; // map pixel to coords
+                var ray_x= -halfWidth + this.thread.x * pixelWidth + 0.5*pixelWidth; //map pixel to coord unit
+                var ray_y= -halfHeight + this.thread.y * pixelHeight + 0.5*pixelHeight; // map pixel to coord unit
                 var ray_z= 1; // default: focal length = 1
                 var length = Math.sqrt(ray_x*ray_x + ray_y*ray_y + ray_z*ray_z);
-                var unit_ray_x = ray_x/length;
-                var unit_ray_y = ray_y/length;
-                var unit_ray_z = ray_z/length;
+                var unit_ray_x = ray_x/length; //get unit vector of ray shot from camera
+                var unit_ray_y = ray_y/length; //get unit vector of ray shot from camera
+                var unit_ray_z = ray_z/length; //get unit vector of ray shot from camera
                 var distance = 0;
                 var minDist;
                 var count = 1;
@@ -153,9 +192,9 @@
                     var t;
                     idx = nextidx;
                     nextidx = idx + objects[idx+1];
-                    var obj_x = objects[idx + 9]-cam[0];
-                    var obj_y = objects[idx + 10]-cam[1];
-                    var obj_z = objects[idx + 11]-cam[2];
+                    var obj_x = objects[idx + 9]-cam[0]; //move object to camera's coordinate system
+                    var obj_y = objects[idx + 10]-cam[1];//move object to camera's coordinate system
+                    var obj_z = objects[idx + 11]-cam[2];//move object to camera's coordinate system
                     if (objects[idx]== this.constants.SPHERE) {
                         var radius1 = objects[idx+12];
                         var a1=(unit_ray_x*unit_ray_x)+(unit_ray_y*unit_ray_y)+(unit_ray_z*unit_ray_z);
@@ -164,7 +203,7 @@
                         var sqrt1 = getDiscriminant(a1,b1,c1);
                         if (sqrt1>=0)
                         {
-                            t = getMinRoot(a1,b1,c1,sqrt1);
+                            t = getMinRoot(a1,b1,c1,sqrt1); //solve equation to find intersection
                         }
                         if(t>0)
                         {
@@ -219,9 +258,9 @@
                                 var hit_x = unit_ray_x*t;
                                 var hit_y = unit_ray_y*t;
                                 var hit_z = unit_ray_z*t;
-                                var light_x = lights[1]-cam[0] - hit_x;
-                                var light_y = lights[2]-cam[1] - hit_y;
-                                var light_z = lights[3]-cam[2] - hit_z;
+                                var light_x = lights[1]-cam[0] - hit_x; //Light position wrt camera's coord system
+                                var light_y = lights[2]-cam[1] - hit_y; //Light position wrt camera's coord system
+                                var light_z = lights[3]-cam[2] - hit_z; //Light position wrt camera's coord system
                                 var light_length = Math.sqrt(light_x*light_x+light_y*light_y+light_z*light_z);
                                 light_x = light_x/light_length;
                                 light_y = light_y/light_length;
@@ -245,12 +284,16 @@
         var end_time;
 
         var mykernel = doit("gpu");
-        start_time = Math.floor(new Date().getTime());
+        //start_time = Math.floor(new Date().getTime()); //Tp measure time taken
         mykernel(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,camera,lights);
+        //end_time = Math.floor(new Date().getTime());
+        //document.write(end_time - start_time);
+        end_time = Math.floor(new Date().getTime());
+
+        var mycode = doit("cpu");
+        mycode(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,camera,lights);
         var canvas = mykernel.getCanvas();
         document.getElementsByTagName('body')[0].appendChild(canvas);
-        end_time = Math.floor(new Date().getTime());
-        document.write(end_time - start_time);
 
         var f = document.querySelector("#fps");
         var angle = 0;
@@ -258,20 +301,38 @@
         function renderLoop() {
             if (selection === 1)
             {
-                camera[2]+=10;
+                camera[2]+=10; // move camera forward
                 selection = 0;
             }
             else if(selection === 2)
             {
-                camera[2]-=10;
+                camera[2]-=10; // move camera backward
+                selection = 0;
+            }
+            else if(selection === 3)
+            {
+                camera[1]+=1;
+                selection = 0;
+            }
+            else if(selection ===4){
+                camera[1]-=1;
                 selection = 0;
             }
             f.innerHTML = fps.getFPS();
-            mykernel(halfWidth, pixelWidth, halfHeight, pixelHeight, objects, camera, lights);
-            var cv = document.getElementsByTagName("canvas")[0];
-            var bdy = cv.parentNode;
-            var newCanvas = mykernel.getCanvas();
-            bdy.replaceChild(newCanvas, cv);
+            if (selection1 === 0 ) {
+                mycode(halfWidth, pixelWidth, halfHeight, pixelHeight, objects, camera, lights);
+                var cv = document.getElementsByTagName("canvas")[0];
+                var bdy = cv.parentNode;
+                var newCanvas = mykernel.getCanvas();
+                bdy.replaceChild(newCanvas, cv);
+            }
+            else{
+                mykernel(halfWidth, pixelWidth, halfHeight, pixelHeight, objects, camera, lights);
+                var cv = document.getElementsByTagName("canvas")[0];
+                var bdy = cv.parentNode;
+                var newCanvas = mykernel.getCanvas();
+                bdy.replaceChild(newCanvas, cv);
+            }
             objects[23] = objects[10]+Math.cos(angle)*rotRad;
             objects[25] = objects[12]+Math.sin(angle)*rotRad;
             objects[50] = objects[10]+Math.cos(-angle)*rotRad;

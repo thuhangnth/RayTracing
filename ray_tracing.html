@@ -57,7 +57,7 @@
 
         var objects = [
             10,                                                                             // number of objects
-            ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  0,10,280,40, // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
+            ObjTyp.SPHERE,      13, 0.0,0.0,1.0,0.2,0.7,0.1,1.0,  0,10,280,40, // typ,recsz,r,g,b,spec,lamb,amb,opac, x,y,z,rad,
             /*ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  10,10,280,40,
             ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  20,10,280,40,
             ObjTyp.SPHERE,      13, 1.0,0.0,0.0,0.2,0.7,0.1,1.0,  30,10,280,40,
@@ -291,9 +291,6 @@
         end_time = Math.floor(new Date().getTime());
 
         var mycode = doit("cpu");
-        mycode(halfWidth,pixelWidth,halfHeight,pixelHeight,objects,camera,lights);
-        var canvas = mykernel.getCanvas();
-        document.getElementsByTagName('body')[0].appendChild(canvas);
 
         var f = document.querySelector("#fps");
         var angle = 0;
@@ -323,7 +320,7 @@
                 mycode(halfWidth, pixelWidth, halfHeight, pixelHeight, objects, camera, lights);
                 var cv = document.getElementsByTagName("canvas")[0];
                 var bdy = cv.parentNode;
-                var newCanvas = mykernel.getCanvas();
+                var newCanvas = mycode.getCanvas();
                 bdy.replaceChild(newCanvas, cv);
             }
             else{

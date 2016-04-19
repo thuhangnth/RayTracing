@@ -89,11 +89,11 @@
         ];
 
         var pi=22/7;
-        var width_in_pixel = 800;  //Screen width in pixel unit
-        var height_in_pixel = 600; //Screen height in pixel unit
+        var width_in_pixel = 800;  //Number of pixels in the width of the screen
+        var height_in_pixel = 600; //Number of pixels in the height of the screen
         var ratio = width_in_pixel/height_in_pixel; //Ratio of screen width to screen height
-        var camAngleRad=camera[6]*pi/180;
-        var halfWidth = Math.tan(0.5*camAngleRad);  //screen half width in coordinate unit. ASSUMPTION: focal length = 1
+        var camAngleRad=camera[6]*pi/180; //Convert angle to radian
+        var halfWidth = Math.tan(0.5*camAngleRad)*1;  //screen half width in coordinate unit. ASSUMPTION: focal length = 1
         var halfHeight = halfWidth/ratio;
         var width = halfWidth*2;
         var height = halfHeight*2;
@@ -205,7 +205,7 @@
                         {
                             t = getMinRoot(a1,b1,c1,sqrt1); //solve equation to find intersection
                         }
-                        if(t>0)
+                        if(t>0) //intersection found
                         {
                             hit = 1;
                             distance = t*length;
@@ -222,7 +222,7 @@
                         if (sqrt2>=0)
                         {
                             t= CylinderIntersect(a2,b2,c2,sqrt2,unit_ray_y,obj_y,obj_y+height);
-                            if(t>=0) {
+                            if(t>=0) { //intersection found
                                 hit = 1;
                                 distance = t * length;
                             }
@@ -249,30 +249,30 @@
                             }
                         }
                     }*/
-                    if (hit == 1)
+                    if (hit == 1) // if the ray hit any object
                     {
                         var lamb = 1;
-                        if (count == 1) minDist = distance;
+                        if (count == 1) minDist = distance; //the nearest distance to an object
                         count++;
-                        if (distance <= minDist) {
-                                var hit_x = unit_ray_x*t;
-                                var hit_y = unit_ray_y*t;
-                                var hit_z = unit_ray_z*t;
-                                var light_x = lights[1]-cam[0] - hit_x; //Light position wrt camera's coord system
-                                var light_y = lights[2]-cam[1] - hit_y; //Light position wrt camera's coord system
-                                var light_z = lights[3]-cam[2] - hit_z; //Light position wrt camera's coord system
+                        if (distance <= minDist) { //if object is nearest to the screen
+                                var hit_x = unit_ray_x*t; //x coord of point of incident
+                                var hit_y = unit_ray_y*t; //y coord of point of incident
+                                var hit_z = unit_ray_z*t; //z coord of point of incident
+                                var light_x = lights[1]-cam[0] - hit_x; //x value of Light position wrt camera's coord system
+                                var light_y = lights[2]-cam[1] - hit_y; //y value of Light position wrt camera's coord system
+                                var light_z = lights[3]-cam[2] - hit_z; //z value of Light position wrt camera's coord system
                                 var light_length = Math.sqrt(light_x*light_x+light_y*light_y+light_z*light_z);
                                 light_x = light_x/light_length;
                                 light_y = light_y/light_length;
                                 light_z = light_z/light_length;
-                                var norm_x = hit_x - obj_x;
-                                var norm_y = hit_y - obj_y;
-                                var norm_z = hit_z - obj_z;
+                                var norm_x = hit_x - obj_x; //x value of normal of the incident surface
+                                var norm_y = hit_y - obj_y; //y value of normal of the incident surface
+                                var norm_z = hit_z - obj_z; //z value normal of the incident surface
                                 var length_norm = Math.sqrt(norm_x*norm_x+norm_y*norm_y+norm_z*norm_z);
-                                norm_x = norm_x/length_norm;
-                                norm_y = norm_y/length_norm;
-                                norm_z = norm_z/length_norm;
-                                lamb = objects[idx+6]*dot(norm_x, norm_y, norm_z, light_x, light_y, light_z)+objects[idx+7];
+                                norm_x = norm_x/length_norm; //x value of unit vector of the normal
+                                norm_y = norm_y/length_norm; //y value of unit vector of the normal
+                                norm_z = norm_z/length_norm; //z value of unit vector of the normal
+                                lamb = objects[idx+6]*dot(norm_x, norm_y, norm_z, light_x, light_y, light_z)+objects[idx+7]; //calculating lambertian
                             this.color(objects[idx + 2]*lamb, objects[idx + 3]*lamb, objects[idx + 4]*lamb);
                         }
                     }
